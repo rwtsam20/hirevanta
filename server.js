@@ -4,7 +4,7 @@ const fs = require("fs");
 const bcrypt = require("bcryptjs");
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const DB_FILE = path.join(__dirname, "data", "db.json");
 
 app.use(express.json());
@@ -164,8 +164,8 @@ app.post("/api/recruiter/create-order", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
-    app: "CareerHub",
-    message: "CareerHub server is running"
+    app: "HireVanta",
+    message: "HireVanta server is running"
   });
 });
 
@@ -444,5 +444,5 @@ app.get("*splat", (req, res) => {
 });
 
 app.listen(PORT, "127.0.0.1", () => {
-  console.log(`CareerHub running on http://127.0.0.1:${PORT}`);
+  console.log(`HireVanta running on http://127.0.0.1:${PORT}`);
 });
