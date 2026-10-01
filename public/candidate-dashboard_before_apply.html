@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareerHub Candidate Dashboard</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:18px 22px;font-size:21px;font-weight:700}
+.container{max-width:950px;margin:25px auto;padding:0 16px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 4px 18px #00000012}
+input,select{padding:12px;border:1px solid #ddd;border-radius:10px;width:100%;margin:5px 0 12px}
+.job{border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin:12px 0}
+button{border:0;border-radius:9px;padding:11px 15px;background:#2563eb;color:white;font-weight:700;margin:4px}
+.secondary{background:#e5e7eb;color:#172033}
+</style>
+</head>
+<body>
+<header>CareerHub • Candidate Dashboard</header>
+<div class="container">
+
+<div class="card">
+<h2>👤 My Profile</h2>
+<input id="email" type="email" placeholder="Your registered email">
+<button onclick="loadProfile()">Load Profile</button>
+<div id="profile"></div>
+</div>
+
+<div class="card">
+<h2>❤️ Saved Jobs</h2>
+<div id="saved"></div>
+</div>
+
+<div class="card">
+<h2>📋 My Applications</h2>
+<div id="applications"></div>
+</div>
+
+<div class="card">
+<h2>🔎 Browse Jobs</h2>
+<input id="search" placeholder="Search jobs..." oninput="renderJobs()">
+<div id="jobs"></div>
+</div>
+
+</div>
+
+<script>
+let allJobs=[];
+let saved=JSON.parse(localStorage.getItem("careerhub_saved_jobs")||"[]");
+
+async function loadJobs(){
+ const r=await fetch("/api/jobs");
+ allJobs=await r.json();
+ renderJobs();
+ renderSaved();
+}
+
+function card(j){
+ return `<div class="job">
+ <h3>${j.title||"Job"}</h3>
+ <b>🏢 ${j.companyName||j.company||""}</b>
+ <p>📍 ${j.location||""}</p>
+ <p>💰 ${j.salary||"Salary not disclosed"}</p>
+ <p>💼 ${j.experience||""}</p>
+ <button onclick="applyJob('${j.id}')">Apply Now</button>
+ <button class="secondary" onclick="toggleSave('${j.id}')">${saved.includes(String(j.id))?"♥ Saved":"♡ Save Job"}</button>
+ </div>`;
+}
+
+function renderJobs(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const list=allJobs.filter(j=>((j.title||"")+" "+(j.companyName||j.company||"")+" "+(j.location||"")).toLowerCase().includes(q));
+ document.getElementById("jobs").innerHTML=list.length?list.map(card).join(""):"<p>No jobs found.</p>";
+}
+
+function toggleSave(id){
+ id=String(id);
+ if(saved.includes(id)) saved=saved.filter(x=>x!==id);
+ else saved.push(id);
+ localStorage.setItem("careerhub_saved_jobs",JSON.stringify(saved));
+ renderJobs();renderSaved();
+}
+
+function renderSaved(){
+ const list=allJobs.filter(j=>saved.includes(String(j.id)));
+ document.getElementById("saved").innerHTML=list.length?list.map(card).join(""):"<p>No saved jobs.</p>";
+}
+
+async function applyJob(id){
+ const name=prompt("Enter your name");
+ if(!name)return;
+ const email=prompt("Enter your email");
+ if(!email)return;
+ const phone=prompt("Enter your phone number")||"";
+ const r=await fetch("/api/jobs/"+id+"/apply",{
+  method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({name,email,phone})
+ });
+ const d=await r.json();
+ alert(d.message||"Application submitted");
+ if(email) loadApplications(email);
+}
+
+async function loadProfile(){
+ const e=document.getElementById("email").value.trim();
+ if(!e)return;
+ try{
+  const r=await fetch("/api/candidates/"+encodeURIComponent(e));
+  const d=await r.json();
+  if(!d.ok){document.getElementById("profile").innerHTML="<p>Profile not found.</p>";return}
+  const c=d.candidate;
+  document.getElementById("profile").innerHTML=
+   `<p><b>${c.name}</b></p><p>${c.phone||""}</p><p>${c.location||""}</p>
+   <p><b>Skills:</b> ${c.skills||""}</p><p><b>Experience:</b> ${c.experience||""}</p>
+   <p><b>Education:</b> ${c.education||""}</p>`;
+  loadApplications(e);
+ }catch(x){alert("Server connection failed")}
+}
+
+async function loadApplications(email){
+ const r=await fetch("/api/jobs");
+ const jobs=await r.json();
+ const emailKey=email.toLowerCase();
+ let html="";
+ for(const j of jobs){
+   const rr=await fetch("/api/recruiter/applications/"+j.companyId);
+   const dd=await rr.json();
+   (dd.applications||[]).filter(a=>a.email.toLowerCase()===emailKey&&String(a.jobId)===String(j.id))
+   .forEach(a=>html+=`<div class="job"><b>${a.jobTitle}</b><p>${a.companyName}</p><p>Status: <b>${a.status}</b></p></div>`);
+ }
+ document.getElementById("applications").innerHTML=html||"<p>No applications found.</p>";
+}
+
+loadJobs();
+</script>
+</body>
+</html>

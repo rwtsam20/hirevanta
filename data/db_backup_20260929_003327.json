@@ -1,0 +1,82 @@
+{
+  "companies": [
+    {
+      "id": 1790545337393,
+      "companyName": "Demo",
+      "email": "rwtsam20@gmail.com",
+      "phone": "09509894007",
+      "password": "Duggu@#234",
+      "createdAt": "2026-09-27T21:42:17.393Z"
+    },
+    {
+      "id": 1790546426083,
+      "companyName": "Test company",
+      "email": "test@careerhub.com",
+      "phone": "9876543210",
+      "password": "$2b$10$sTteOEZ/9QvlevcCwIUry.p49yZVnd0Omdu.ZlyldiRecvUxERfiG",
+      "createdAt": "2026-09-27T22:00:26.083Z"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 1790621306833,
+      "companyId": 1790546426083,
+      "companyName": "Test Company",
+      "title": "Store Manager",
+      "location": "Sri Ganganagar",
+      "country": "India",
+      "salary": "₹25000 - ₹35000",
+      "experience": "2-5 Years",
+      "description": "Manage store operations, team performance and sales.",
+      "status": "active",
+      "createdAt": "2026-09-28T18:48:26.833Z"
+    },
+    {
+      "id": 1790621733978,
+      "companyId": 1790546426083,
+      "companyName": "Test Company",
+      "title": "Store Manager",
+      "location": "Sri Ganganagar",
+      "country": "India",
+      "salary": "₹25000 - ₹35000",
+      "experience": "2-5 Years",
+      "description": "Manage store operations, team performance and sales.",
+      "status": "active",
+      "createdAt": "2026-09-28T18:55:33.978Z"
+    }
+  ],
+  "applications": [],
+  "ads": [],
+  "payments": [
+    {
+      "id": "CH1790620593148",
+      "companyId": 1790546426083,
+      "plan": "starter",
+      "planName": "Starter",
+      "amount": 599,
+      "days": 7,
+      "status": "created",
+      "createdAt": "2026-09-28T18:36:33.148Z"
+    },
+    {
+      "id": "CH1790620625417",
+      "companyId": 1790546426083,
+      "plan": "starter",
+      "planName": "Starter",
+      "amount": 599,
+      "days": 7,
+      "status": "created",
+      "createdAt": "2026-09-28T18:37:05.417Z"
+    },
+    {
+      "id": "CH1790620647591",
+      "companyId": 1790546426083,
+      "plan": "growth",
+      "planName": "Growth",
+      "amount": 999,
+      "days": 15,
+      "status": "created",
+      "createdAt": "2026-09-28T18:37:27.591Z"
+    }
+  ]
+}

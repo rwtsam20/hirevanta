@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerHub</title>
+  <meta name="description" content="CareerHub - Find your next opportunity">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+    header{background:#fff;border-bottom:1px solid #e7eaf0;position:sticky;top:0;z-index:10}
+    .nav{max-width:1100px;margin:auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .logo{font-size:25px;font-weight:800}
+    .logo span{font-weight:400}
+    .nav button{border:0;background:#172033;color:#fff;padding:11px 18px;border-radius:10px;font-weight:700}
+    main{max-width:1100px;margin:auto;padding:35px 20px}
+    .hero{background:#172033;color:#fff;border-radius:22px;padding:42px 30px;margin-bottom:25px}
+    .hero h1{font-size:38px;margin:0 0 10px}
+    .hero p{color:#cbd3e1;font-size:16px}
+    .search{background:#fff;padding:12px;border-radius:15px;display:flex;gap:10px;margin-top:25px}
+    .search input{flex:1;border:0;outline:0;padding:13px;font-size:15px;min-width:0}
+    .search button{border:0;background:#172033;color:#fff;border-radius:10px;padding:0 22px;font-weight:700}
+    h2{margin-top:30px}
+    .categories{display:flex;gap:10px;overflow:auto;padding:5px 0 10px}
+    .cat{background:#fff;border:1px solid #e5e8ef;padding:12px 17px;border-radius:12px;white-space:nowrap}
+    .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .job{background:#fff;border:1px solid #e6e9ef;border-radius:17px;padding:20px;box-shadow:0 4px 16px rgba(20,30,50,.04)}
+    .company{color:#667085;margin:7px 0}
+    .meta{color:#667085;font-size:14px;line-height:1.8}
+    .apply{width:100%;border:0;background:#172033;color:#fff;padding:12px;border-radius:10px;margin-top:15px;font-weight:700}
+    .empty{text-align:center;color:#667085;padding:30px}
+    @media(max-width:800px){.jobs{grid-template-columns:1fr 1fr}}
+    @media(max-width:600px){
+      .hero{padding:30px 20px}
+      .hero h1{font-size:29px}
+      .search{flex-direction:column}
+      .search button{padding:13px}
+      .jobs{grid-template-columns:1fr}
+    }
+  </style>
+
+<style>
+.ch-tools{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:20px 0}
+.ch-tools input,.ch-tools select{padding:13px;border:1px solid #ddd;border-radius:10px;width:100%;box-sizing:border-box}
+.job-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 3px 12px #0000000d}
+.job-card h3{margin:0 0 8px}
+.job-card button{padding:10px 14px;border:0;border-radius:8px;margin:6px 6px 0 0;cursor:pointer}
+.ch-save{background:#f3f4f6}
+.ch-apply{background:#2563eb;color:#fff}
+@media(max-width:700px){.ch-tools{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">Career<span>Hub</span></div>
+    <button onclick="alert('Login & registration coming next')">Sign In</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Find your next opportunity.</h1>
+    <p>Discover jobs, build your career and connect with employers.</p>
+
+    <div class="search">
+      <input id="keyword" placeholder="Job title, skill or company">
+      <input id="location" placeholder="City or location">
+      <button onclick="searchJobs()">Search Jobs</button>
+    </div>
+  </section>
+
+  <h2>Explore Categories</h2>
+
+  <div class="categories">
+    <div class="cat">Retail</div>
+    <div class="cat">Sales</div>
+    <div class="cat">HR</div>
+    <div class="cat">Accounts</div>
+    <div class="cat">IT</div>
+    <div class="cat">Marketing</div>
+    <div class="cat">Operations</div>
+  </div>
+
+  <h2>Recommended Jobs</h2>
+
+  
+<div class="ch-tools">
+<input id="jobSearch" placeholder="🔎 Search jobs, skills or company" oninput="filterJobs()">
+<input id="jobLocation" placeholder="📍 Location" oninput="filterJobs()">
+<select id="jobType" onchange="filterJobs()">
+<option value="">All Job Types</option>
+<option>Full Time</option>
+<option>Part Time</option>
+<option>Internship</option>
+<option>Contract</option>
+<option>Remote</option>
+</select>
+</div>
+<div class="ch-tools">
+<input id="jobSearch" placeholder="🔎 Search jobs, skills or company">
+<input id="jobLocation" placeholder="📍 Location">
+<select id="jobType">
+<option value="">All Job Types</option>
+<option value="Full Time">Full Time</option>
+<option value="Part Time">Part Time</option>
+<option value="Internship">Internship</option>
+<option value="Contract">Contract</option>
+<option value="Remote">Remote</option>
+</select>
+</div>
+
+<div id="jobs" class="jobs">
+<div class="empty">Loading jobs...</div>
+</div>
+
+<script>
+let allJobs=[];
+
+async function loadJobs(){
+  const box=document.getElementById("jobs");
+  try{
+    const response=await fetch("/api/jobs");
+    if(!response.ok) throw new Error("API error");
+    allJobs=await response.json();
+    renderJobs(allJobs);
+  }catch(error){
+    console.error(error);
+    box.innerHTML="<div class='empty'>Unable to load jobs.</div>";
+  }
+}
+
+function renderJobs(list){
+  const box=document.getElementById("jobs");
+  if(!list.length){
+    box.innerHTML="<div class='empty'>No jobs found.</div>";
+    return;
+  }
+
+  box.innerHTML=list.map(function(j){
+    return `
+    <div class="job-card">
+      <h3>${j.title||"Job"}</h3>
+      <p><strong>🏢 ${j.companyName||j.company||""}</strong></p>
+      <p>📍 ${j.location||""} ${j.country?"• "+j.country:""}</p>
+      <p>💰 ${j.salary||"Salary not disclosed"}</p>
+      <p>💼 ${j.experience||"Experience not specified"}</p>
+      <p>${j.description||""}</p>
+      <button onclick="saveJob('${j.id}')">♡ Save</button>
+      <button onclick="applyJob('${j.id}')">Apply Now</button>
+    </div>`;
+  }).join("");
+}
+
+function filterJobs(){
+  const q=document.getElementById("jobSearch").value.toLowerCase();
+  const loc=document.getElementById("jobLocation").value.toLowerCase();
+  const type=document.getElementById("jobType").value;
+
+  const filtered=allJobs.filter(function(j){
+    const text=((j.title||"")+" "+(j.companyName||j.company||"")+" "+(j.description||"")).toLowerCase();
+    const location=(j.location||"").toLowerCase();
+    return (!q||text.includes(q)) &&
+           (!loc||location.includes(loc)) &&
+           (!type||type==="Remote" ? (type==="Remote" ? location.includes("remote") : true) : (j.type||"").toLowerCase()===type.toLowerCase());
+  });
+
+  renderJobs(filtered);
+}
+
+function saveJob(id){
+  let saved=JSON.parse(localStorage.getItem("careerhub_saved_jobs")||"[]");
+  if(!saved.includes(String(id))) saved.push(String(id));
+  localStorage.setItem("careerhub_saved_jobs",JSON.stringify(saved));
+  alert("Job saved successfully!");
+}
+
+async function applyJob(id){
+  const name=prompt("Enter your name");
+  if(!name)return;
+  const email=prompt("Enter your email");
+  if(!email)return;
+  const phone=prompt("Enter your phone number")||"";
+
+  try{
+    const response=await fetch("/api/jobs/"+id+"/apply",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:name,email:email,phone:phone})
+    });
+    const result=await response.json();
+    alert(result.message||"Application submitted");
+  }catch(error){
+    alert("Server connection failed.");
+  }
+}
+
+document.getElementById("jobSearch").addEventListener("input",filterJobs);
+document.getElementById("jobLocation").addEventListener("input",filterJobs);
+document.getElementById("jobType").addEventListener("change",filterJobs);
+
+loadJobs();
+</script>
+
+<script>console.log("PROFESSIONAL_JOB_SEARCH_FIXED");</script></body>
+</html>

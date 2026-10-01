@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerHub Recruiter Login</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+.box{max-width:480px;margin:40px auto;background:#fff;padding:25px;border-radius:18px;box-shadow:0 5px 25px #0001}
+h1{margin-top:0}
+input{width:100%;box-sizing:border-box;padding:14px;margin:8px 0 12px;border:1px solid #d8dee9;border-radius:10px}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#2563eb;color:white;font-weight:bold;font-size:16px}
+#msg{margin-top:15px;font-weight:bold}
+a{display:block;margin-top:18px;text-align:center}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>Recruiter Login</h1>
+<p>Sign in to manage your company and hiring.</p>
+
+<input id="email" type="email" placeholder="Business Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Sign In</button>
+
+<div id="msg"></div>
+<a href="/recruiter/register.html">Create Recruiter Account</a>
+</div>
+
+<script>
+async function login(){
+  const msg=document.getElementById("msg");
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+
+  if(!email || !password){
+    msg.textContent="Please enter email and password.";
+    return;
+  }
+
+  try{
+    const res=await fetch("/api/recruiter/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email,password})
+    });
+
+    const result=await res.json();
+
+    if(result.ok){
+      localStorage.setItem("careerhub_recruiter",JSON.stringify(result.company));
+      msg.textContent="✅ Login successful!";
+      setTimeout(()=>location.href="/recruiter/dashboard.html",700);
+    }else{
+      msg.textContent="❌ "+result.message;
+    }
+  }catch(e){
+    msg.textContent="❌ Server connection failed.";
+  }
+}
+</script>
+</body>
+</html>

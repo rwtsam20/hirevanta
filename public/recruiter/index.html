@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerHub Recruiter</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f5f7fb;color:#172033}
+header{background:#111827;color:white;padding:18px 22px;font-size:22px;font-weight:700}
+.container{max-width:900px;margin:30px auto;padding:0 18px}
+.card{background:white;border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 4px 18px #00000012}
+h1{font-size:28px;margin-bottom:8px}
+input,textarea,select{width:100%;box-sizing:border-box;padding:13px;margin:8px 0 14px;border:1px solid #d8dee9;border-radius:10px;font-size:15px}
+button{border:0;border-radius:10px;padding:13px 18px;background:#2563eb;color:white;font-weight:700;font-size:15px}
+.plan{border:2px solid #e5e7eb;padding:18px;border-radius:14px;margin-top:12px}
+.price{font-size:25px;font-weight:800}
+</style>
+</head>
+<body>
+
+<header>CareerHub • Recruiter</header>
+
+<div class="container">
+  <div class="card">
+    <h1>Hire the right talent</h1>
+    <p>Post jobs, promote vacancies and reach candidates across India and internationally.</p>
+  </div>
+
+  <div class="card">
+    <h2>Post a Job</h2>
+
+    <input id="companyName" placeholder="Company Name">
+    <input id="jobTitle" placeholder="Job Title">
+    <input id="location" placeholder="Location (City / Country)">
+    
+    <select id="country">
+      <option>India</option>
+      <option>International</option>
+      <option>Remote - Worldwide</option>
+    </select>
+
+    <input id="salary" placeholder="Salary / Compensation">
+    <input id="experience" placeholder="Experience Required">
+    <textarea id="description" rows="5" placeholder="Job Description"></textarea>
+
+    <button onclick="postJob()">
+      Post Job
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>Promote Your Hiring</h2>
+    <p>Get additional visibility for your vacancies.</p>
+
+    <div class="plan">
+      <b>Starter</b>
+      <div class="price">₹599</div>
+      <p>1 promoted job • 7 days</p>
+      <button onclick="alert('₹599 plan selected')">Choose Starter</button>
+    </div>
+
+    <div class="plan">
+      <b>Growth</b>
+      <div class="price">₹999</div>
+      <p>1 promoted job • 15 days • Priority visibility</p>
+      <button onclick="alert('₹999 plan selected')">Choose Growth</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Company Advertisement</h2>
+    <p>Promote your company, hiring campaign or services on CareerHub.</p>
+    <button onclick="alert('Company advertising system will be connected next.')">
+      Create Advertisement
+    </button>
+  </div>
+</div>
+
+<script>async function postJob(){const r=JSON.parse(localStorage.getItem("careerhub_recruiter")||"null");if(!r){alert("Please login first.");location.href="/recruiter/login.html";return}const d={companyId:r.id,companyName:document.getElementById("companyName").value.trim(),title:document.getElementById("jobTitle").value.trim(),location:document.getElementById("location").value.trim(),country:document.getElementById("country").value,salary:document.getElementById("salary").value.trim(),experience:document.getElementById("experience").value.trim(),description:document.getElementById("description").value.trim()};if(!d.title||!d.location||!d.description){alert("Please fill Job Title, Location and Job Description.");return}try{const x=await fetch("/api/recruiter/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),j=await x.json();if(j.ok){alert("Job posted successfully!");document.getElementById("jobTitle").value="";document.getElementById("location").value="";document.getElementById("salary").value="";document.getElementById("experience").value="";document.getElementById("description").value=""}else alert(j.message)}catch(e){alert("Server connection failed.")}}</script></body>
+</html>

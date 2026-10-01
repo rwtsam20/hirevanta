@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareerHub Job Details</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:17px 20px;font-size:22px;font-weight:800}
+.wrap{max-width:850px;margin:25px auto;padding:15px}
+.card{background:#fff;padding:24px;border-radius:17px;box-shadow:0 5px 20px #00000012}
+h1{margin-top:0}
+.info{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+.tag{background:#eef2ff;padding:8px 11px;border-radius:20px}
+input,textarea{width:100%;padding:13px;margin:6px 0 12px;border:1px solid #ddd;border-radius:10px}
+textarea{min-height:120px}
+button{border:0;border-radius:10px;padding:12px 18px;background:#2563eb;color:white;font-weight:700;cursor:pointer}
+.secondary{background:#374151}
+</style>
+</head>
+<body>
+<header>CareerHub</header>
+<div class="wrap">
+<div class="card" id="jobBox">Loading job...</div>
+</div>
+
+<script>
+const id=new URLSearchParams(location.search).get("id");
+let job=null;
+
+async function load(){
+ if(!id){
+  document.getElementById("jobBox").innerHTML="<h2>Job not found</h2>";
+  return;
+ }
+ const r=await fetch("/api/jobs/"+encodeURIComponent(id));
+ const d=await r.json();
+ if(!d.ok){
+  document.getElementById("jobBox").innerHTML="<h2>Job not found</h2>";
+  return;
+ }
+ job=d.job;
+ render();
+}
+
+function render(){
+ document.getElementById("jobBox").innerHTML=`
+ <h1>${job.title}</h1>
+ <h3>🏢 ${job.companyName||""}</h3>
+ <div class="info">
+  <span class="tag">📍 ${job.location||""}</span>
+  <span class="tag">🌎 ${job.country||""}</span>
+  <span class="tag">💰 ${job.salary||"Salary not disclosed"}</span>
+  <span class="tag">💼 ${job.experience||"Not specified"}</span>
+ </div>
+ <hr>
+ <h2>Job Description</h2>
+ <p style="white-space:pre-wrap">${job.description||"No description provided."}</p>
+ <hr>
+ <h2>Apply for this job</h2>
+ <input id="name" placeholder="Full Name">
+ <input id="email" type="email" placeholder="Email Address">
+ <input id="phone" placeholder="Phone Number">
+ <input id="resume" placeholder="Resume link (optional)">
+ <button onclick="apply()">Apply Now</button>
+ <button class="secondary" onclick="save()">♡ Save Job</button>
+ <p id="msg"></p>`;
+ autofill();
+}
+
+function autofill(){
+ const c=JSON.parse(localStorage.getItem("careerhub_candidate")||"null");
+ if(c){
+  document.getElementById("name").value=c.name||"";
+  document.getElementById("email").value=c.email||"";
+  document.getElementById("phone").value=c.phone||"";
+  document.getElementById("resume").value=c.resume||"";
+ }
+}
+
+async function apply(){
+ const nameEl=document.getElementById("name");
+ const emailEl=document.getElementById("email");
+ const phoneEl=document.getElementById("phone");
+ const resumeEl=document.getElementById("resume");
+ const msgEl=document.getElementById("msg");
+
+ const candidate=JSON.parse(localStorage.getItem("careerhub_candidate")||"null");
+
+ const body={
+  name:nameEl.value.trim(),
+  email:emailEl.value.trim(),
+  phone:phoneEl.value.trim(),
+  resume:resumeEl.value.trim(),
+  candidateId:candidate ? candidate.id : ""
+ };
+
+ if(!body.name||!body.email){
+  msgEl.innerText="Name and email are required";
+  return;
+ }
+
+ msgEl.innerText="Submitting application...";
+
+ try{
+  const r=await fetch("/api/jobs/"+encodeURIComponent(id)+"/apply",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(body)
+  });
+
+  const d=await r.json();
+
+  if(d.ok){
+   msgEl.innerHTML="<b>✅ Application submitted successfully!</b>";
+   return;
+  }
+
+  msgEl.innerText="❌ "+(d.message||"Application failed");
+ }catch(e){
+  msgEl.innerText="❌ Server connection failed. Please try again.";
+ }
+}
+
+
+function save(){
+ let s=JSON.parse(localStorage.getItem("careerhub_saved_jobs")||"[]");
+ if(!s.includes(String(id)))s.push(String(id));
+ localStorage.setItem("careerhub_saved_jobs",JSON.stringify(s));
+ alert("Job saved successfully");
+}
+
+load();
+</script>
+</body>
+</html>

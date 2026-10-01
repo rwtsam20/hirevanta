@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerHub Recruiter Registration</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+.box{max-width:480px;margin:40px auto;background:#fff;padding:25px;border-radius:18px;box-shadow:0 5px 25px #0001}
+h1{margin-top:0}
+input{width:100%;box-sizing:border-box;padding:14px;margin:8px 0 12px;border:1px solid #d8dee9;border-radius:10px}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#2563eb;color:white;font-weight:bold;font-size:16px}
+#msg{margin-top:15px;font-weight:bold}
+a{display:block;margin-top:18px;text-align:center}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>Create Recruiter Account</h1>
+<p>Register your company and start hiring on CareerHub.</p>
+
+<input id="companyName" placeholder="Company Name">
+<input id="email" type="email" placeholder="Business Email">
+<input id="phone" placeholder="Phone Number">
+<input id="password" type="password" placeholder="Create Password">
+
+<button onclick="register()">Create Account</button>
+
+<div id="msg"></div>
+<a href="/recruiter">← Back to Recruiter</a>
+</div>
+
+<script>
+async function register(){
+  const msg=document.getElementById("msg");
+  const data={
+    companyName:document.getElementById("companyName").value.trim(),
+    email:document.getElementById("email").value.trim(),
+    phone:document.getElementById("phone").value.trim(),
+    password:document.getElementById("password").value
+  };
+
+  if(!data.companyName || !data.email || !data.password){
+    msg.textContent="Please fill Company Name, Email and Password.";
+    return;
+  }
+
+  try{
+    const res=await fetch("/api/recruiter/register",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data)
+    });
+
+    const result=await res.json();
+    msg.textContent=result.message;
+
+    if(result.ok){
+      msg.textContent="✅ Account created successfully!";
+    }
+  }catch(e){
+    msg.textContent="❌ Server connection failed.";
+  }
+}
+</script>
+</body>
+</html>

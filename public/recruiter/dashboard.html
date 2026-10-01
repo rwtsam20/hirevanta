@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareerHub Recruiter Dashboard</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:#111827;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:22px;font-weight:800}
+.logout{background:#374151;color:white;border:0;border-radius:8px;padding:9px 13px}
+.wrap{max-width:1100px;margin:auto;padding:22px 15px}
+.welcome{margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stat{background:white;padding:20px;border-radius:15px;box-shadow:0 3px 15px #00000010}
+.stat b{font-size:28px;display:block;margin-top:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.card{background:white;border-radius:15px;padding:20px;box-shadow:0 3px 15px #00000010}
+button{border:0;border-radius:9px;padding:10px 14px;background:#2563eb;color:white;font-weight:700;margin:4px;cursor:pointer}
+.green{background:#16a34a}.red{background:#dc2626}.dark{background:#374151}
+.job,.app,.ad{border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin:10px 0}
+input,textarea{width:100%;padding:11px;margin:6px 0 12px;border:1px solid #ddd;border-radius:9px}
+textarea{min-height:90px;resize:vertical}
+small{color:#667085}
+@media(max-width:700px){.stats,.grid{grid-template-columns:1fr}.wrap{padding:15px}.stat b{font-size:24px}}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">CareerHub Recruiter</div>
+<button class="logout" onclick="logout()">Logout</button>
+</header>
+
+<div class="wrap">
+<div class="welcome">
+<h2 id="welcome">Welcome 👋</h2>
+<small>Manage your hiring, jobs and candidates from one place.</small>
+</div>
+
+<div class="stats">
+<div class="stat">📢 Active Jobs <b id="jobsCount">0</b></div>
+<div class="stat">👥 Applicants <b id="appCount">0</b></div>
+<div class="stat">🏢 Company <b id="companyName">—</b></div>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h2>➕ Post a Job</h2>
+<input id="title" placeholder="Job Title">
+<input id="location" placeholder="Location">
+<input id="country" placeholder="Country" value="India">
+<input id="salary" placeholder="Salary">
+<input id="experience" placeholder="Experience">
+<textarea id="description" placeholder="Job description"></textarea>
+<button onclick="postJob()">Post Job</button>
+<p id="jobMsg"></p>
+</div>
+
+<div class="card">
+<h2>💳 Promote Hiring</h2>
+<p><b>Starter — ₹599</b><br>1 promoted job • 7 days</p>
+<button onclick="buyPlan('starter')">Buy Starter</button>
+<hr>
+<p><b>Growth — ₹999</b><br>1 promoted job • 15 days</p>
+<button onclick="buyPlan('growth')">Buy Growth</button>
+<div id="paymentMsg"></div>
+</div>
+
+</div>
+
+<div class="card" style="margin-top:18px">
+<h2>📋 My Jobs</h2>
+<div id="myJobs">Loading...</div>
+</div>
+
+<div class="card" style="margin-top:18px">
+<h2>👥 Applicants</h2>
+<div id="apps">Loading...</div>
+</div>
+
+<div class="card" style="margin-top:18px">
+<h2>📢 Company Ads</h2>
+<input id="adTitle" placeholder="Ad title">
+<textarea id="adDescription" placeholder="Advertisement description"></textarea>
+<input id="adBudget" type="number" placeholder="Budget ₹">
+<button onclick="createAd()">Create Company Ad</button>
+<div id="ads"></div>
+</div>
+
+</div>
+
+<script>
+const company=JSON.parse(localStorage.getItem("careerhub_recruiter")||"null");
+
+if(!company){
+ document.body.innerHTML="<div style='padding:30px;text-align:center'><h2>Please login first</h2><a href='/recruiter/login.html'>Go to Login</a></div>";
+}else{
+ document.getElementById("welcome").innerText="Welcome, "+company.companyName+" 👋";
+ document.getElementById("companyName").innerText=company.companyName;
+ loadAll();
+}
+
+function logout(){
+ localStorage.removeItem("careerhub_recruiter");
+ location.href="/recruiter/login.html";
+}
+
+async function loadAll(){
+ await Promise.all([loadJobs(),loadApps(),loadAds()]);
+}
+
+async function loadJobs(){
+ const r=await fetch("/api/recruiter/jobs/"+company.id);
+ const d=await r.json();
+ const jobs=d.jobs||[];
+ document.getElementById("jobsCount").innerText=jobs.filter(x=>x.status==="active").length;
+ document.getElementById("myJobs").innerHTML=jobs.length?
+ jobs.map(j=>`<div class="job"><h3>${j.title}</h3><p>📍 ${j.location} • 💼 ${j.experience||"Not specified"}</p><p>💰 ${j.salary||"Salary not disclosed"}</p><small>${j.status}</small></div>`).join("")
+ :"<p>No jobs posted yet.</p>";
+}
+
+async function loadApps(){
+ const r=await fetch("/api/recruiter/applications/"+company.id);
+ const d=await r.json();
+ const apps=d.applications||[];
+ document.getElementById("appCount").innerText=apps.length;
+ document.getElementById("apps").innerHTML=apps.length?
+ apps.map(a=>`<div class="app">
+ <h3>${a.name}</h3>
+ <p><b>${a.jobTitle}</b> • ${a.email}</p>
+ <p>📞 ${a.phone||"—"} | Status: <b>${a.status}</b></p>
+ <button class="green" onclick="updateStatus('${a.id}','Shortlisted')">Shortlist</button>
+ <button onclick="updateStatus('${a.id}','Interview')">Interview</button>
+ <button class="red" onclick="updateStatus('${a.id}','Rejected')">Reject</button>
+ </div>`).join("")
+ :"<p>No applicants yet.</p>";
+}
+
+async function updateStatus(id,status){
+ const r=await fetch("/api/recruiter/application-status",{
+ method:"PATCH",headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({applicationId:id,status,companyId:company.id})
+ });
+ const d=await r.json();
+ alert(d.message||"Updated");
+ loadApps();
+}
+
+async function postJob(){
+ const body={
+ companyId:company.id,companyName:company.companyName,
+ title:title.value.trim(),location:location.value.trim(),
+ country:country.value.trim(),salary:salary.value.trim(),
+ experience:experience.value.trim(),description:description.value.trim()
+ };
+ const r=await fetch("/api/recruiter/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+ const d=await r.json();
+ document.getElementById("jobMsg").innerText=d.message||"";
+ if(d.ok){
+  ["title","location","salary","experience","description"].forEach(x=>document.getElementById(x).value="");
+  loadJobs();
+ }
+}
+
+async function buyPlan(plan){
+ const r=await fetch("/api/recruiter/create-order",{
+ method:"POST",headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({companyId:company.id,plan})
+ });
+ const d=await r.json();
+ document.getElementById("paymentMsg").innerHTML=d.ok?
+ "<p>Order created: <b>"+d.order.id+"</b><br>Amount: ₹"+d.order.amount+"</p>":
+ "<p>"+d.message+"</p>";
+}
+
+async function createAd(){
+ const body={companyId:company.id,title:adTitle.value.trim(),description:adDescription.value.trim(),budget:adBudget.value||0};
+ const r=await fetch("/api/recruiter/ads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+ const d=await r.json();
+ alert(d.message||"Done");
+ if(d.ok){
+  adTitle.value="";adDescription.value="";adBudget.value="";
+  loadAds();
+ }
+}
+
+async function loadAds(){
+ const r=await fetch("/api/recruiter/ads/"+company.id);
+ const d=await r.json();
+ const ads=d.ads||[];
+ document.getElementById("ads").innerHTML=ads.length?
+ ads.map(a=>`<div class="ad"><b>${a.title}</b><p>${a.description}</p><small>Budget: ₹${a.budget} • Status: ${a.status}</small></div>`).join("")
+ :"<p>No company ads created.</p>";
+}
+</script>
+</body>
+</html>

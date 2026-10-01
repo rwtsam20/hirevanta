@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerHub</title>
+  <meta name="description" content="CareerHub - Find your next opportunity">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+    header{background:#fff;border-bottom:1px solid #e7eaf0;position:sticky;top:0;z-index:10}
+    .nav{max-width:1100px;margin:auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .logo{font-size:25px;font-weight:800}
+    .logo span{font-weight:400}
+    .nav button{border:0;background:#172033;color:#fff;padding:11px 18px;border-radius:10px;font-weight:700}
+    main{max-width:1100px;margin:auto;padding:35px 20px}
+    .hero{background:#172033;color:#fff;border-radius:22px;padding:42px 30px;margin-bottom:25px}
+    .hero h1{font-size:38px;margin:0 0 10px}
+    .hero p{color:#cbd3e1;font-size:16px}
+    .search{background:#fff;padding:12px;border-radius:15px;display:flex;gap:10px;margin-top:25px}
+    .search input{flex:1;border:0;outline:0;padding:13px;font-size:15px;min-width:0}
+    .search button{border:0;background:#172033;color:#fff;border-radius:10px;padding:0 22px;font-weight:700}
+    h2{margin-top:30px}
+    .categories{display:flex;gap:10px;overflow:auto;padding:5px 0 10px}
+    .cat{background:#fff;border:1px solid #e5e8ef;padding:12px 17px;border-radius:12px;white-space:nowrap}
+    .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .job{background:#fff;border:1px solid #e6e9ef;border-radius:17px;padding:20px;box-shadow:0 4px 16px rgba(20,30,50,.04)}
+    .company{color:#667085;margin:7px 0}
+    .meta{color:#667085;font-size:14px;line-height:1.8}
+    .apply{width:100%;border:0;background:#172033;color:#fff;padding:12px;border-radius:10px;margin-top:15px;font-weight:700}
+    .empty{text-align:center;color:#667085;padding:30px}
+    @media(max-width:800px){.jobs{grid-template-columns:1fr 1fr}}
+    @media(max-width:600px){
+      .hero{padding:30px 20px}
+      .hero h1{font-size:29px}
+      .search{flex-direction:column}
+      .search button{padding:13px}
+      .jobs{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">Career<span>Hub</span></div>
+    <button onclick="alert('Login & registration coming next')">Sign In</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Find your next opportunity.</h1>
+    <p>Discover jobs, build your career and connect with employers.</p>
+
+    <div class="search">
+      <input id="keyword" placeholder="Job title, skill or company">
+      <input id="location" placeholder="City or location">
+      <button onclick="searchJobs()">Search Jobs</button>
+    </div>
+  </section>
+
+  <h2>Explore Categories</h2>
+
+  <div class="categories">
+    <div class="cat">Retail</div>
+    <div class="cat">Sales</div>
+    <div class="cat">HR</div>
+    <div class="cat">Accounts</div>
+    <div class="cat">IT</div>
+    <div class="cat">Marketing</div>
+    <div class="cat">Operations</div>
+  </div>
+
+  <h2>Recommended Jobs</h2>
+
+  <div id="jobs" class="jobs">
+    <div class="empty">Loading jobs...</div>
+  </div>
+</main>
+
+<script>
+let allJobs=[];
+
+async function loadJobs(){
+  const box=document.getElementById("jobs");
+  if(!box) return;
+
+  try{
+    const res=await fetch("/api/jobs");
+    const jobs=await res.json();
+
+    if(!jobs.length){
+      box.innerHTML="<p>No jobs available right now.</p>";
+      return;
+    }
+
+    box.innerHTML=jobs.map(j=>`
+      <div class="job-card">
+        <h3>${j.title || "Job"}</h3>
+        <p><strong>${j.companyName || j.company || ""}</strong></p>
+        <p>📍 ${j.location || ""}</p>
+        <p>💰 ${j.salary || "Salary not disclosed"}</p>
+        <p>💼 ${j.experience || ""}</p>
+        <p>${j.description || ""}</p>
+        <button onclick="applyJob('${j.id}')">Apply Now</button>
+      </div>
+    `).join("");
+  }catch(e){
+    box.innerHTML="<p>Unable to load jobs. Please try again.</p>";
+  }
+}
+
+async function applyJob(id){
+  const name=prompt("Enter your name");
+  if(!name) return;
+
+  const email=prompt("Enter your email");
+  if(!email) return;
+
+  const phone=prompt("Enter your phone number") || "";
+
+  try{
+    const res=await fetch("/api/jobs/"+id+"/apply",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,email,phone})
+    });
+
+    const result=await res.json();
+    alert(result.message || "Application submitted");
+  }catch(e){
+    alert("Server connection failed.");
+  }
+}
+
+loadJobs();</script>
+
+</body>
+</html>
